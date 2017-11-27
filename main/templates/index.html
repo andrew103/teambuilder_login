@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="row">
+  <div class="col-lg-6">
+    <h2>Welcome to Developer Teambuilder</h2>
+    <p>
+      This is where your story begins.
+      <br>
+      <br>
+      Join a project you'd like to be a part of, find people that can do what is
+      required for your idea to become a reality or get in touch with other devs
+      and figure out together how you can make the world a better place
+    </p>
+  </div>
+
+  <div class="col-lg-6">
+    <form action="{% url_for('signup') %}" method="post">
+      <div class="form-group">
+          <label for="nameinput">Name</label>
+          <input type="text" class="form-control" name="nameinput" required>
+      </div>
+      <div class="form-group">
+          <label for="passinput">Password</label>
+          <input type="password" class="form-control" name="passinput" required>
+      </div>
+      <div class="form-group">
+          <label for="confirmpass">Confirm Password</label>
+          <input type="password" class="form-control" name="confirmpass" required>
+      </div>
+      <div class="form-group">
+          <label for="emailinput">Email</label>
+          <input type="email" class="form-control" name="emailinput" required>
+      </div>
+      <button type="submit" class="btn btn-primary">Sign Up</button>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
