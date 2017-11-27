@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h2>Are you sure you want to log out?</h2>
+<form action="{{ url_for('logout') }}" method="post">
+    <button type="submit" class="btn btn-danger">Log Out</button>
+    <a href="{{ url_for('home') }}">Cancel</a>
+</form>
+
+{% endblock %}
