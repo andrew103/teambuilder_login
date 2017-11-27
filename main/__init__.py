@@ -3,7 +3,7 @@ from flask import url_for, redirect, flash, render_template
 
 from flask import session as login_session
 
-from .models import Base, User
+from models import Base, User
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from functools import wraps
@@ -54,13 +54,14 @@ def login():
         try:
             user = session.query(User).filter_by(email=email).first()
             if user.verify_password(password):
-                if request.form['remember_me']:
+                if request.form.get("remember_me"):
                     login_user(user, force=True, remember=True)
                 else:
+                    print("Hello")
                     login_user(user, force=True)
                 flash("You have logged in successfully " + user.name)
                 user.is_authenticated = True
-                return redirect(url_for('showCatalog'))
+                return redirect(url_for('home'))
             else:
                 flash("You entered an incorrect password. Please try again")
                 return redirect(url_for('login'))
