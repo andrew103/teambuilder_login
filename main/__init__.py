@@ -87,6 +87,11 @@ def signup():
         user = request.form['nameinput']
         email = request.form['emailinput']
         password = request.form['passinput']
+
+        if password != request.form['confirmpass']:
+            flash("Passwords don't match")
+            return redirect(url_for('signup'))
+
         newUser = User(name=user, email=email)
         newUser.hash_password(password)
 
