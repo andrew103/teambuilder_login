@@ -57,7 +57,6 @@ def login():
                 if request.form.get("remember_me"):
                     login_user(user, force=True, remember=True)
                 else:
-                    print("Hello")
                     login_user(user, force=True)
                 flash("You have logged in successfully " + user.name)
                 user.is_authenticated = True
