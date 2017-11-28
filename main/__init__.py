@@ -15,7 +15,7 @@ from flask_login import LoginManager, login_user
 
 from itsdangerous import URLSafeTimedSerializer
 
-from flaskext.mail import Mail, Message
+from flask_mail import Mail, Message
 
 #===================== INIT CODE ============================
 
@@ -25,7 +25,14 @@ DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
 app = Flask(__name__)
-mail = Mail(app)
+
+# app.config.update(
+#     MAIL_SERVER='smtp@gmail.com',
+#     MAIL_PORT=465,
+#     MAIL_USE_SSL=True
+# )
+
+# mail = Mail(app)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -34,7 +41,7 @@ login_manager.login_view = 'login'
 app.secret_key = "userloginapplication"
 app.debug = True
 
-ts = URLSafeTimedSerializer(app.config["SECRET_KEY"])
+# ts = URLSafeTimedSerializer(app.config["SECRET_KEY"])
 
 # ================= BEGIN LOGIN REQUIREMENT CODE ==============
 
@@ -109,44 +116,40 @@ def signup():
         newUser.is_authenticated=True
 
         flash("Welcome "+user+". You have successfully signed up")
-        return redirect(url_for('send_email'))
+
+        # token = ts.dumps(newUser.email, salt='email-confirm-key')
+        # confirm_url = url_for('confirm_email', token=token, _external=True)
+        # msg = Message("Confirm your account", sender="donotreply@teambuilder.com")
+        #
+        # msg.html = render_template('email.html', confirm_url=confirm_url)
+        # msg.add_recipient(newUser.email)
+        # mail.send(msg)
+
+        return redirect(url_for('home'))
     else:
         return render_template('signup.html')
-
-@app.route('/signup/send_email')
-def send_email(email):
-    token = ts.dumps(self.email, salt='email-confirm-key')
-    email = ts.loads(token, salt="email-confirm-key", max_age=3600)
-    confirm_url = url_for('confirm_email', token=token, _external=True)
-    msg = Message("Confirm your account", sender="donotreply@teambuilder.com", recipient=[email])
-
-    msg.html = render_template('email.html', confirm_url=confirm_url)
-
-    mail.send(msg)
-
-    return redirect(url_for('home'))
 
 @app.route('/')
 @app.route('/index')
 def home():
     return render_template('index.html')
 
-@app.route('/confirm/<token>')
-def confirm_email(token):
-    try:
-        email = ts.loads(token, salt="email-confirm-key", max_age=3600)
-    except:
-        flash("Confirmation link out of date. Please resend and try again")
-        return redirect(url_for('home'))
-
-    user = session.query(User).filter_by(email=email).first()
-    user.confirmed = True
-
-    session.add(user)
-    session.commit()
-
-    flash("Account confirmed")
-    return redirect(url_for('home'))
+# @app.route('/confirm/<token>')
+# def confirm_email(token):
+#     try:
+#         email = ts.loads(token, salt="email-confirm-key", max_age=3600)
+#     except:
+#         flash("Confirmation link out of date. Please resend and try again")
+#         return redirect(url_for('home'))
+#
+#     user = session.query(User).filter_by(email=email).first()
+#     user.confirmed = True
+#
+#     session.add(user)
+#     session.commit()
+#
+#     flash("Account confirmed")
+#     return redirect(url_for('home'))
 
 
 if __name__ == "__main__":
