@@ -41,6 +41,10 @@
 
                 {% block content %}
                 {% endblock %}
+
+                {% if not current_user.confirmed %}
+                    <p>You have not confirmed your account. If you did not receive the confirmation email, click <a href="{{ url_for('send_email') }}">here</a> to resend it</p>
+                {% endif %}
             </div>
         </div>
     </body>
