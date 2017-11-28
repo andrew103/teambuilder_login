@@ -13,6 +13,8 @@ import random, string
 import flask_login
 from flask_login import LoginManager, login_user
 
+from itsdangerous import URLSafeTimedSerializer
+
 #===================== INIT CODE ============================
 
 engine = create_engine('sqlite:///user.db')
@@ -28,6 +30,8 @@ login_manager.login_view = 'login'
 
 app.secret_key = "userloginapplication"
 app.debug = True
+
+ts = URLSafeTimedSerializer(app.config["SECRET_KEY"])
 
 # ================= BEGIN LOGIN REQUIREMENT CODE ==============
 
@@ -92,7 +96,7 @@ def signup():
             flash("Passwords don't match")
             return redirect(url_for('signup'))
 
-        newUser = User(name=user, email=email)
+        newUser = User(name=user, email=email, confirmed=False)
         newUser.hash_password(password)
 
         session.add(newUser)

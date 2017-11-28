@@ -17,6 +17,7 @@ class User(Base):
     password_hash = Column(String(300))
     is_authenticated = Column(Boolean)
     is_active = Column(Boolean)
+    confirmed = Column(Boolean, nullable=False, default=False)
 
     def hash_password(self, password):
         self.password_hash = pwd_context.encrypt(password)
