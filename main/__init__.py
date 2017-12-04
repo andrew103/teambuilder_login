@@ -116,16 +116,21 @@ def signup():
         confirm_url = url_for('confirm_email', token=token, _external=True)
 
         msg = MIMEMultipart()
-        msg['From'] = 'fbar620@gmail.com'
+        msg['From'] = 'DoNotReply@teambuilder.com'
         msg['To'] = email
         msg['Subject'] = 'Email confirmation'
         body = confirm_url
         msg.attach(MIMEText(body, 'plain'))
 
-        server.starttls()
+        try:
+            server.starttls()
+        except:
+            server.connect()
+            server.starttls()
+            
         server.login('fbar620@gmail.com', 'fake_password')
         text = msg.as_string()
-        server.sendmail('fbar620@gmail.com', email, text)
+        server.sendmail('DoNotReply@teambuilder.com', email, text)
         server.quit()
 
         return redirect(url_for('home'))
