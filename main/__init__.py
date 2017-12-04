@@ -3,7 +3,7 @@ from flask import url_for, redirect, flash, render_template
 
 from flask import session as login_session
 
-from models import Base, User
+from main.models import Base, User
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from functools import wraps
@@ -127,7 +127,7 @@ def signup():
         except:
             server.connect()
             server.starttls()
-            
+
         server.login('fbar620@gmail.com', 'fake_password')
         text = msg.as_string()
         server.sendmail('DoNotReply@teambuilder.com', email, text)
@@ -158,7 +158,3 @@ def confirm_email(token):
 
     flash("Account confirmed")
     return redirect(url_for('home'))
-
-
-if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=8000)
