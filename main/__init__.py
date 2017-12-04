@@ -130,7 +130,10 @@ def signup():
 
         server.login('fbar620@gmail.com', 'fake_password')
         text = msg.as_string()
-        server.sendmail('DoNotReply@teambuilder.com', email, text)
+        try:
+            server.sendmail('DoNotReply@teambuilder.com', email, text)
+        except:
+            flash("Invalid email")
         server.quit()
 
         return redirect(url_for('home'))
