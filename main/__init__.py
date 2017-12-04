@@ -15,7 +15,9 @@ from flask_login import LoginManager, login_user
 
 from itsdangerous import URLSafeTimedSerializer
 
-from flask_mail import Mail, Message
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 #===================== INIT CODE ============================
 
@@ -26,14 +28,6 @@ session = DBSession()
 
 app = Flask(__name__)
 
-# app.config.update(
-#     MAIL_SERVER='smtp@gmail.com',
-#     MAIL_PORT=465,
-#     MAIL_USE_SSL=True
-# )
-
-# mail = Mail(app)
-
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
@@ -41,7 +35,8 @@ login_manager.login_view = 'login'
 app.secret_key = "userloginapplication"
 app.debug = True
 
-# ts = URLSafeTimedSerializer(app.config["SECRET_KEY"])
+server = smtplib.SMTP('smtp.gmail.com', 587)
+ts = URLSafeTimedSerializer(app.config["SECRET_KEY"])
 
 # ================= BEGIN LOGIN REQUIREMENT CODE ==============
 
@@ -117,13 +112,21 @@ def signup():
 
         flash("Welcome "+user+". You have successfully signed up")
 
-        # token = ts.dumps(newUser.email, salt='email-confirm-key')
-        # confirm_url = url_for('confirm_email', token=token, _external=True)
-        # msg = Message("Confirm your account", sender="donotreply@teambuilder.com")
-        #
-        # msg.html = render_template('email.html', confirm_url=confirm_url)
-        # msg.add_recipient(newUser.email)
-        # mail.send(msg)
+        token = ts.dumps(email, salt='email-confirm-key')
+        confirm_url = url_for('confirm_email', token=token, _external=True)
+
+        msg = MIMEMultipart()
+        msg['From'] = 'fbar620@gmail.com'
+        msg['To'] = email
+        msg['Subject'] = 'Email confirmation'
+        body = confirm_url
+        msg.attach(MIMEText(body, 'plain'))
+
+        server.starttls()
+        server.login('fbar620@gmail.com', 'fake_password')
+        text = msg.as_string()
+        server.sendmail('fbar620@gmail.com', email, text)
+        server.quit()
 
         return redirect(url_for('home'))
     else:
@@ -134,23 +137,23 @@ def signup():
 def home():
     return render_template('index.html')
 
-# @app.route('/confirm/<token>')
-# def confirm_email(token):
-#     try:
-#         email = ts.loads(token, salt="email-confirm-key", max_age=3600)
-#     except:
-#         flash("Confirmation link out of date. Please resend and try again")
-#         return redirect(url_for('home'))
-#
-#     user = session.query(User).filter_by(email=email).first()
-#     user.confirmed = True
-#
-#     session.add(user)
-#     session.commit()
-#
-#     flash("Account confirmed")
-#     return redirect(url_for('home'))
+@app.route('/confirm/<token>')
+def confirm_email(token):
+    try:
+        email = ts.loads(token, salt="email-confirm-key", max_age=3600)
+    except:
+        flash("Confirmation link out of date. Please resend and try again")
+        return redirect(url_for('home'))
+
+    user = session.query(User).filter_by(email=email).first()
+    user.confirmed = True
+
+    session.add(user)
+    session.commit()
+
+    flash("Account confirmed")
+    return redirect(url_for('home'))
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000)
+    app.run(host="127.0.0.1", port=8000)

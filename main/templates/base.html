@@ -39,6 +39,10 @@
                     {% endif %}
                 {% endwith %}
 
+                {% if current_user.confirmed %}
+                  <p>You are a confirmed user!</p>
+                {% endif %}
+
                 {% block content %}
                 {% endblock %}
             </div>
