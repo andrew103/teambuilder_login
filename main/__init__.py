@@ -8,7 +8,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from functools import wraps
 
-import random, string
+import random, string, json
 
 import flask_login
 from flask_login import LoginManager, login_user
@@ -119,8 +119,8 @@ def signup():
         msg['From'] = 'DoNotReply@teambuilder.com'
         msg['To'] = email
         msg['Subject'] = 'Email confirmation'
-        body = confirm_url
-        msg.attach(MIMEText(body, 'plain'))
+        body = render_template('email.html', confirm_url=confirm_url)
+        msg.attach(MIMEText(body, 'html'))
 
         try:
             server.starttls()
@@ -138,6 +138,9 @@ def signup():
 
         return redirect(url_for('home'))
     else:
+        # print(request.args['nameinput'])
+        # print(request.args['emailinput'])
+        # print(request.args['passinput'])
         return render_template('signup.html')
 
 @app.route('/')
