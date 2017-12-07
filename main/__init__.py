@@ -119,7 +119,7 @@ def signup():
         msg['From'] = 'DoNotReply@teambuilder.com'
         msg['To'] = email
         msg['Subject'] = 'Email confirmation'
-        body = render_template('email.html', confirm_url=confirm_url)
+        body = render_template('email.html', name=user)
         msg.attach(MIMEText(body, 'html'))
 
         try:
