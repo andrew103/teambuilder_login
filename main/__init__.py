@@ -100,7 +100,7 @@ def signup():
         confirm_code = generate_code()
 
         # check if user already exists
-        if len(session.query(PendingUser).filter_by(email=email)) > 0 or len(session.query(User).filter_by(email=email)) > 0:
+        if session.query(PendingUser).filter_by(email=email).first() or session.query(User).filter_by(email=email).first():
             return jsonify(success=False, error="exists")
 
         newUser = PendingUser(name=user, email=email, code=confirm_code)
