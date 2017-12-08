@@ -21,7 +21,7 @@ from email.mime.text import MIMEText
 
 #===================== INIT CODE ============================
 
-engine = create_engine('sqlite:///user.db')
+engine = create_engine('sqlite:///site.db')
 Base.metadata.bind = engine
 DBSession = sessionmaker(bind=engine)
 session = DBSession()

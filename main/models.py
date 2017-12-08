@@ -64,5 +64,5 @@ class PendingUser(Base):
         }
 
 
-engine = create_engine('sqlite:///user.db')
+engine = create_engine('sqlite:///site.db')
 Base.metadata.create_all(engine)
