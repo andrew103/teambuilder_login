@@ -53,9 +53,7 @@ def load_user(user_id):
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     state = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(32))
-
     login_session['state'] = state
-
     if request.method == 'POST':
         email = request.form['email']
         password = request.form['pass']
@@ -72,13 +70,14 @@ def login():
                     login_user(user, force=True)
                 flash("You have logged in successfully " + user.name)
                 user.is_authenticated = True
-                return redirect(url_for('home')) # JSON object
+
+                return jsonify(success=True, data=user.serialize)
             else:
                 flash("You entered an incorrect password. Please try again")
-                return redirect(url_for('login')) # JSON object
+                return jsonify(success=False, error="pass") # JSON object
         except:
             flash("User does not exist. Please create an account")
-            return redirect(url_for('signup')) # JSON object
+            return jsonify(success=False, error="user") # JSON object
     else:
         return render_template('login.html', STATE=state)
 
@@ -99,6 +98,10 @@ def signup():
         email = request.form['email']
         password = request.form['pass']
         confirm_code = generate_code()
+
+        # check if user already exists
+        if len(session.query(PendingUser).filter_by(email=email)) > 0 or len(session.query(User).filter_by(email=email)) > 0:
+            return jsonify(success=False, error="exists")
 
         newUser = PendingUser(name=user, email=email, code=confirm_code)
         newUser.hash_password(password)
@@ -135,9 +138,11 @@ def signup():
             server.sendmail('DoNotReply@teambuilder.com', email, text)
         except:
             flash("Invalid email")
+            return jsonify(success=False, error="email")
+
         server.quit()
 
-        return jsonify(test=[1,2,3]) # JSON object
+        return jsonify(success=True, data=newUser.serialize) # JSON object
     else:
         # print(request.args['nameinput'])
         # print(request.args['emailinput'])
@@ -152,31 +157,39 @@ def home():
 @app.route('/confirm', methods=['GET', 'POST'])
 def confirm_email():
     if request.method == 'POST':
-        user = request.form['user_id']
+        pending_user_id = request.form['user_id']
         code = request.form['code']
 
         try:
-            user = session.query(PendingUser).filter_by(id=user).first()
+            pending_user = session.query(PendingUser).filter_by(id=pending_user_id).first()
         except:
             flash("User does not exist")
+            return jsonify(success=False, error="user")
 
-        if code == user.code:
+        if code == pending_user.code:
             # create new user with the same attributes of pendinguser then delete pendinguser
+            user = User(name=pending_user.name,
+                        email=pending_user.email,
+                        password_hash=pending_user.password_hash,
+                        is_authenticated=pending_user.is_authenticated,
+                        is_active=pending_user.is_active)
             session.add(user)
+            session.delete(pending_user)
             session.commit()
 
             flash("Account confirmed")
-            return True # return JSON object with True in it
+            return jsonify(success=True, data=user.serialize) # return JSON object with True in it
 
-        return False
+        return jsonify(success=False, error="code")
     else:
-        return "GET OFF MY LAWN" ## PLACEHOLDER
+        return jsonify(access="denied")
 
 
 def generate_code():
     code = ""
+    chars = string.ascii_letters + string.digits
     for i in range(8):
-        char = string.printable[random.randint(0, len(string.printable)-1)]
+        char = chars[random.randint(0, len(chars)-1)]
         code += char
 
     return code

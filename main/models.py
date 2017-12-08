@@ -33,7 +33,6 @@ class User(Base):
             'id': self.id,
             'name': self.name,
             'email': self.email,
-            'hash': self.password_hash,
         }
 
 class PendingUser(Base):
@@ -62,7 +61,6 @@ class PendingUser(Base):
             'id': self.id,
             'name': self.name,
             'email': self.email,
-            'hash': self.password_hash,
         }
 
 
