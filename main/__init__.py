@@ -3,12 +3,12 @@ from flask import url_for, redirect, flash, render_template
 
 from flask import session as login_session
 
-from main.models import Base, User
+from main.models import Base, User, PendingUser
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from functools import wraps
 
-import random, string, json
+import random, string
 
 import flask_login
 from flask_login import LoginManager, login_user
@@ -36,7 +36,6 @@ app.secret_key = "userloginapplication"
 app.debug = True
 
 server = smtplib.SMTP('smtp.gmail.com', 587)
-ts = URLSafeTimedSerializer(app.config["SECRET_KEY"])
 
 # ================= BEGIN LOGIN REQUIREMENT CODE ==============
 
@@ -58,10 +57,14 @@ def login():
     login_session['state'] = state
 
     if request.method == 'POST':
-        email = request.form['emailinput']
-        password = request.form['passinput']
+        email = request.form['email']
+        password = request.form['pass']
         try:
-            user = session.query(User).filter_by(email=email).first()
+            try:
+                user = session.query(PendingUser).filter_by(email=email).first()
+            except:
+                user = session.query(User).filter_by(email=email).first()
+
             if user.verify_password(password):
                 if request.form.get("remember_me"):
                     login_user(user, force=True, remember=True)
@@ -69,16 +72,15 @@ def login():
                     login_user(user, force=True)
                 flash("You have logged in successfully " + user.name)
                 user.is_authenticated = True
-                return redirect(url_for('home'))
+                return redirect(url_for('home')) # JSON object
             else:
                 flash("You entered an incorrect password. Please try again")
-                return redirect(url_for('login'))
+                return redirect(url_for('login')) # JSON object
         except:
             flash("User does not exist. Please create an account")
-            return redirect(url_for('signup'))
+            return redirect(url_for('signup')) # JSON object
     else:
         return render_template('login.html', STATE=state)
-
 
 @app.route('/logout', methods=['GET', 'POST'])
 def logout():
@@ -93,15 +95,12 @@ def logout():
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
-        user = request.form['nameinput']
-        email = request.form['emailinput']
-        password = request.form['passinput']
+        user = request.form['name']
+        email = request.form['email']
+        password = request.form['pass']
+        confirm_code = generate_code()
 
-        if password != request.form['confirmpass']:
-            flash("Passwords don't match")
-            return redirect(url_for('signup'))
-
-        newUser = User(name=user, email=email, confirmed=False)
+        newUser = PendingUser(name=user, email=email, code=confirm_code)
         newUser.hash_password(password)
 
         session.add(newUser)
@@ -111,9 +110,6 @@ def signup():
         newUser.is_authenticated=True
 
         flash("Welcome "+user+". You have successfully signed up")
-
-        token = ts.dumps(email, salt='email-confirm-key')
-        confirm_url = url_for('confirm_email', token=token, _external=True)
 
         msg = MIMEMultipart()
         msg['From'] = 'DoNotReply@teambuilder.com'
@@ -136,7 +132,7 @@ def signup():
             flash("Invalid email")
         server.quit()
 
-        return redirect(url_for('home'))
+        return jsonify(test=[1,2,3]) # JSON object
     else:
         # print(request.args['nameinput'])
         # print(request.args['emailinput'])
@@ -148,19 +144,33 @@ def signup():
 def home():
     return render_template('index.html')
 
-@app.route('/confirm/<token>')
-def confirm_email(token):
-    try:
-        email = ts.loads(token, salt="email-confirm-key", max_age=3600)
-    except:
-        flash("Confirmation link out of date. Please resend and try again")
-        return redirect(url_for('home'))
+@app.route('/confirm', methods=['GET', 'POST'])
+def confirm_email():
+    if request.method == 'POST':
+        user = request.form['user_id']
+        code = request.form['code']
 
-    user = session.query(User).filter_by(email=email).first()
-    user.confirmed = True
+        try:
+            user = session.query(PendingUser).filter_by(id=user).first()
+        except:
+            flash("User does not exist")
 
-    session.add(user)
-    session.commit()
+        if code == user.code:
+            session.add(user)
+            session.commit()
 
-    flash("Account confirmed")
-    return redirect(url_for('home'))
+            flash("Account confirmed")
+            return True # return JSON object with True in it
+
+        return False
+    else:
+        return "GET OFF MY LAWN" ## PLACEHOLDER
+
+
+def generate_code():
+    code = ""
+    for i in range(8):
+        char = string.printable[random.randint(0, len(string.printable)-1)]
+        code += char
+
+    return code

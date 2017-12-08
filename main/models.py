@@ -17,7 +17,6 @@ class User(Base):
     password_hash = Column(String(300))
     is_authenticated = Column(Boolean)
     is_active = Column(Boolean)
-    confirmed = Column(Boolean, nullable=False, default=False)
 
     def hash_password(self, password):
         self.password_hash = pwd_context.encrypt(password)
@@ -36,6 +35,36 @@ class User(Base):
             'email': self.email,
             'hash': self.password_hash,
         }
+
+class PendingUser(Base):
+    __tablename__ = 'pendingusers'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String(200), nullable=False)
+    email = Column(String(200))
+    password_hash = Column(String(300))
+    is_authenticated = Column(Boolean)
+    is_active = Column(Boolean)
+    code = Column(String(15), nullable=False, default=False)
+
+    def hash_password(self, password):
+        self.password_hash = pwd_context.encrypt(password)
+
+    def verify_password(self, password):
+        return pwd_context.verify(password, self.password_hash)
+
+    def get_id(self):
+        return str(self.id)
+
+    @property
+    def serialize(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'email': self.email,
+            'hash': self.password_hash,
+        }
+
 
 engine = create_engine('sqlite:///user.db')
 Base.metadata.create_all(engine)
