@@ -9,4 +9,4 @@
 
 **Note: Run the command `deactivate` from anywhere in the console to disable the virtual environment
 
-**Important: Must have Python 3.x installed and added to your PATH on your machine to run the app
+**Important: Must have Python 3.x installed and added to your PATH (Environment Variables) on your machine to run the app
