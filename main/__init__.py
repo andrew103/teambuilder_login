@@ -94,14 +94,11 @@ def logout():
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
-    print(request.data)
     if request.method == 'POST':
         user = request.form['name']
         email = request.form['email']
         password = request.form['pass']
         confirm_code = generate_code()
-
-        print(user+email+password)
 
         newUser = PendingUser(name=user, email=email, code=confirm_code)
         newUser.hash_password(password)
@@ -134,7 +131,6 @@ def signup():
 
         server.login('fbar620@gmail.com', 'fake_password')
         text = msg.as_string()
-        print("Before email send")
         try:
             server.sendmail('DoNotReply@teambuilder.com', email, text)
         except:
@@ -165,6 +161,7 @@ def confirm_email():
             flash("User does not exist")
 
         if code == user.code:
+            # create new user with the same attributes of pendinguser then delete pendinguser
             session.add(user)
             session.commit()
 
