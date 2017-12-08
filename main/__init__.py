@@ -94,11 +94,14 @@ def logout():
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
+    print(request.data)
     if request.method == 'POST':
         user = request.form['name']
         email = request.form['email']
         password = request.form['pass']
         confirm_code = generate_code()
+
+        print(user+email+password)
 
         newUser = PendingUser(name=user, email=email, code=confirm_code)
         newUser.hash_password(password)
@@ -115,17 +118,23 @@ def signup():
         msg['From'] = 'DoNotReply@teambuilder.com'
         msg['To'] = email
         msg['Subject'] = 'Email confirmation'
-        body = render_template('email.html', name=user)
+        body = render_template('email.html', name=user, code=confirm_code)
         msg.attach(MIMEText(body, 'html'))
 
         try:
             server.starttls()
         except:
-            server.connect()
+            while True:
+                try:
+                    server.connect()
+                    break
+                except:
+                    pass
             server.starttls()
 
         server.login('fbar620@gmail.com', 'fake_password')
         text = msg.as_string()
+        print("Before email send")
         try:
             server.sendmail('DoNotReply@teambuilder.com', email, text)
         except:
